@@ -9,8 +9,8 @@ var lightmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{
 
 // Create the map with our layers
 var map = L.map("map", {
-    center: [36, -120],
-    zoom: 6,
+    center: [40, -115],
+    zoom: 5,
     layers: [ new L.LayerGroup() ]
   });
   
@@ -18,26 +18,33 @@ var map = L.map("map", {
 lightmap.addTo(map);
 
 function markerSize(mag) {
-    return 5000 + mag * 5000;
+    return 5000 + mag * 20000;
 }
 
 d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",
 jsonData => {
     jsonData.features.forEach(feature => {
+        var quake = feature.properties;
+        var normMag = quake.mag / 5.0;
+        if(normMag > 1.0) normMag = 1.0;
+        var g = (15 - Math.floor(normMag * 15)).toString(16);
+        var r = (Math.floor(normMag * 15)).toString(16);
+        var fillColor = `#${r}${g}0`;
         var props = {
             fillOpacity: 0.75,
-            color: "red",
-            fillColor: "yellow",
+            color: "brown",
+            weight: 1,
+            fillColor: fillColor,
             // Setting our circle's radius equal to the output of our markerSize function
             // This will make our marker's size proportionate to its population
-            radius: markerSize(feature.properties.mag)
+            radius: markerSize(quake.mag)
         };
         var coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
         L.circle(coords, props)
             .bindPopup(
-                "<h1>Magnitude: " + feature.properties.mag + 
-                "</h1> <hr> <h3>" + feature.properties.place + 
-                "</h3>")
+                `<div class="quake-pop"><a href="${quake.url}" target="_blank">${quake.title}</a> <br/>
+                ${new Date(quake.time).toLocaleString("en-US", {"timeZoneName": "short"})}<br />
+                Type: ${quake.type}`)
             .addTo(map);
         
     });
