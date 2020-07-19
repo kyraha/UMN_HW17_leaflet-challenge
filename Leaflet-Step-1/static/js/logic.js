@@ -22,7 +22,7 @@ function markerSize(mag) {
 }
 
 function markerColor(mag) {
-    var normMag = mag / 5.0;
+    var normMag = mag / 6.0;
     if(normMag > 1.0) normMag = 1.0;
     var g = (15 - Math.floor(normMag * 15)).toString(16);
     var r = (Math.floor(normMag * 15)).toString(16);
@@ -34,7 +34,7 @@ jsonData => {
     jsonData.features.forEach(feature => {
         var quake = feature.properties;
         var props = {
-            fillOpacity: 0.75,
+            fillOpacity: 0.5,
             color: "brown",
             weight: 1,
             fillColor: markerColor(quake.mag),
