@@ -21,20 +21,23 @@ function markerSize(mag) {
     return 5000 + mag * 20000;
 }
 
+function markerColor(mag) {
+    var normMag = mag / 5.0;
+    if(normMag > 1.0) normMag = 1.0;
+    var g = (15 - Math.floor(normMag * 15)).toString(16);
+    var r = (Math.floor(normMag * 15)).toString(16);
+    return `#${r}${g}0`;
+}
+
 d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",
 jsonData => {
     jsonData.features.forEach(feature => {
         var quake = feature.properties;
-        var normMag = quake.mag / 5.0;
-        if(normMag > 1.0) normMag = 1.0;
-        var g = (15 - Math.floor(normMag * 15)).toString(16);
-        var r = (Math.floor(normMag * 15)).toString(16);
-        var fillColor = `#${r}${g}0`;
         var props = {
             fillOpacity: 0.75,
             color: "brown",
             weight: 1,
-            fillColor: fillColor,
+            fillColor: markerColor(quake.mag),
             // Setting our circle's radius equal to the output of our markerSize function
             // This will make our marker's size proportionate to its population
             radius: markerSize(quake.mag)
@@ -48,5 +51,33 @@ jsonData => {
             .addTo(map);
         
     });
+
+    // Set up the legend
+    var legend = L.control({ position: "bottomleft" });
+    legend.onAdd = function() {
+        var div = L.DomUtil.create("div", "info legend");
+        var limits = [0,1,2,3,4,5,6,7];
+        var colors = limits.map(x => markerColor(x));
+        var labels = [];
+
+        // Add min & max
+        var legendInfo = "<h1>Earthquake Magnitude</h1>" +
+        "<div class=\"labels\">" +
+            "<div class=\"min\">" + limits[0] + "</div>" +
+            "<div class=\"max\">" + limits[limits.length - 1] + "</div>" +
+        "</div>";
+
+        div.innerHTML = legendInfo;
+
+        limits.forEach((limit, index) => {
+            labels.push("<li style=\"background-color: " + colors[index] + "\"></li>");
+        });
+
+        div.innerHTML += "<ul>" + labels.join("") + "</ul>";
+        return div;
+    };
+
+    // Adding legend to the map
+    legend.addTo(map);
 });
 
